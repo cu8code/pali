@@ -1,4 +1,3 @@
-// http.h
 #pragma once
 
 #include <arpa/inet.h>

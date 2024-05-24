@@ -4,7 +4,6 @@
 #include <sys/socket.h>
 #include <vector>
 
-// HTTPRequest implementation
 HTTPRequest::HTTPRequest(std::string method, std::string path,
                          std::unordered_map<std::string, std::string> headers,
                          std::string body)
@@ -20,7 +19,6 @@ std::string HTTPRequest::toString() {
   return ss.str();
 }
 
-// HTTPResponse implementation
 HTTPResponse::HTTPResponse(int statusCode,
                            std::unordered_map<std::string, std::string> headers,
                            std::string body)
@@ -36,7 +34,6 @@ std::string HTTPResponse::toString() {
   return ss.str();
 }
 
-// Router implementation
 void Router::addRoute(const std::string &method, const std::string &pattern,
                       const RequestHandler &handler) {
   routes[method] = {method, pattern, handler};
@@ -46,9 +43,7 @@ void Router::get(const std::string &pattern, const RequestHandler &handler) {
   addRoute("GET", pattern, handler);
 }
 
-// Application implementation
 Application::Application(int port) {
-  // Initialize socket
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0) {
     std::cerr << "failed to start a server on port " << port << std::endl;
@@ -62,7 +57,7 @@ Application::Application(int port) {
   serverAddr.sin_port = htons(port);
 
   if (bind(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0) {
-    // Handle bind error
+    // todo
   }
 
   listen(sockfd, 5);
@@ -106,14 +101,12 @@ void Application::run() {
     int clientfd =
         accept(sockfd, (struct sockaddr *)&clientAddr, &clientAddrLen);
     if (clientfd < 0) {
-      // Handle accept error
       continue;
     }
 
     char buffer[1024];
     ssize_t bytesRead = read(clientfd, buffer, sizeof(buffer) - 1);
     if (bytesRead < 0) {
-      // Handle read error
       close(clientfd);
       continue;
     }
@@ -122,9 +115,8 @@ void Application::run() {
     std::string requestStr(buffer);
     HTTPRequest request = parseRequest(requestStr);
 
-    // Find and execute the appropriate route handler
     bool routeFound = false;
-    std::cout << "[LOG] request recived: " << request.path << std::endl;
+    std::cout << "[LOG] request received: " << request.path << std::endl;
     for (const auto &router : routers) {
       const auto &routerRoutes = router.getRoutes();
       const auto &routeForMethod = routerRoutes.find(request.method);
@@ -141,7 +133,6 @@ void Application::run() {
     }
 
     if (!routeFound) {
-      // No route found, send 404 response
       HTTPResponse response(404, {}, "Not Found");
       std::string responseStr = response.toString();
       send(clientfd, responseStr.c_str(), responseStr.length(), 0);
